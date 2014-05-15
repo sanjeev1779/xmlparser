@@ -1,579 +1,361 @@
-/*
-XML MAIN FILE
-  Author : sanjeev1779
-  IIT Jodhpur
-  CSE
-*/
-
-
+/* Programming Tools and Techniques
+ * Main File
+ * Assignment No.: 01
+ * Santosh Kumar Siddharth
+ * Sanjeev Kumar
+ * Date: 18/01/2014
+ */
 package xml;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Stack;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-/**
- *
- * @author cyber
- * GUI testing of the tree
- */
-class node_position
+import java.util.Vector;
+import javax.swing.JFrame;
+class tag_struct
 {
-    public int node_x=0;
-    public int node_y=0;
-    public node_position()
+    public String tag_attribute;
+    public String tag_data;
+    public String tag_name;
+    public int parent_name;
+    public int node_index;
+    public int level_number;
+    public boolean presence;
+    public Vector<Integer>child= new Vector<>();
+    public tag_struct()
     {
-        node_x=0;
-        node_y=0;
+        this.tag_attribute="";
+        this.tag_data="";
+        this.tag_name="";
+        this.parent_name=0;
+        this.node_index=0;
+        this.level_number=0;
+        this.presence=true;
+    }
+    public void reinit()
+    {
+        this.tag_attribute="";
+        this.tag_data="";
+        this.tag_name="";
+        this.parent_name=0;
+        this.level_number=0;
+        this.child.clear();
     }
 }
-public class treePanel extends JPanel implements MouseListener, ActionListener
+public class xmlparser 
 {
-    public static Dimension panel_area_size= new Dimension(1300,760);
-    public static int line_x1=0, line_x2=0, line_y1=0, line_y2=0,parent_node=0,i=0,j=0,node_number,node1=0,node2=0,first=0,first_node=0;
-    public static boolean edit_button= false,delete_button=false,delete_single=false,update_button=false,add_button=false,add_btw=false, getcontent_button=false;
-    public static int unit_width=0,h=0,w=0,x,y;
-    public static int unit_height=0,node_num=0;
-    public static int k=0;
-    public static Cursor cursor_type= new Cursor(Cursor.HAND_CURSOR); 
-    public static int grid[][]= new int[1000][1000];  //used for searching the node and query
-    public static int cal_position_in_level[] = new int[1002];  
-    public static node_position node_location[] = new node_position[1002];
-    public treePanel()throws IOException
-    {
-        
-        for(int node=0;node<=xmlparser.node_number+2;node++)
-        {
-            node_location[node]= new node_position();
-        }
-        
-       
-        
-        setBackground(Color.white);
-        addMouseListener(this);
-        setPreferredSize(panel_area_size);
-        setCursor(cursor_type);
-        setBorder(BorderFactory.createLineBorder(Color.black, 2));
-        JButton edit= new JButton("Swap Subtree");
-        add(edit);
-        edit.setBounds(100, 100, 50, 50);
-        edit.addActionListener(new ActionListener(){ 
-        @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                  edit_button=true;
-                   // edit_tree();
-                    
-            }
-        });
-        JButton delete= new JButton("Delete Subtree");
-        add(delete);
-        delete.addActionListener(new ActionListener(){ 
-        @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                  delete_button=true;
-                   // edit_tree();
-                    
-            }
-        });
-        
-        JButton delete_node= new JButton("Delete Node");
-        add(delete_node);
-        delete_node.addActionListener(new ActionListener(){ 
-        @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                  delete_single=true;
-                   // edit_tree();
-                    
-            }
-        });
-        JButton update_btn= new JButton("Update");
-        add(update_btn);
-        update_btn.addActionListener(new ActionListener(){ 
-        @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                  update_button=true;
-                   // edit_tree();
-                    
-            }
-        });
-        
-        JButton add_btn= new JButton("Add Node");
-        add(add_btn);
-        add_btn.addActionListener(new ActionListener(){ 
-        @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                  add_button=true;
-                  System.out.println("Add button in teeepanel "+add_button);
-                   // edit_tree();
-                    
-            }
-        });
-        
-        JButton add_between= new JButton("Add Between Nodes");
-        add(add_between);
-        add_between.addActionListener(new ActionListener(){ 
-        @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                  add_btw=true;
-                  System.out.println("Add button in teeepanel "+add_button);
-                   // edit_tree();
-                    
-            }
-        });
-        
-        JButton getContent= new JButton("Get Content");
-        add(getContent);
-        getContent.addActionListener(new ActionListener(){ 
-        @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                  
-                  System.out.println("Get content Clicked");
-            try {
-                 getcontent_button= true;
-                getContent gc= new getContent();
-                 getcontent_button=false;
-            } catch (IOException ex) {
-                Logger.getLogger(treePanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            }
-        });
-         //creating the paint area panel
-        make_grid(); //stores which node is at grid[i][j]
-        find_cell_number(); 
-       
-    }
-    
-    // creating the graphics and paint component of the application
-    @Override
-    public void paintComponent(Graphics g)
-    {
-         g.setColor(Color.WHITE);
-         g.fillRect(0, 0, this.getWidth(), this.getHeight());
-                         
-         Graphics2D g2 = (Graphics2D)g;
-             w= this.getWidth();
-             h = this.getHeight();
-              
-
-            
-            unit_height= h/(2*(xmlparser.max_depth+1));
-            unit_width= w/(2*xmlparser.maxm_diameter);
-            
-           
-             addNode(g2); // all it for creating the nodes and edges
-    } // paint component ended
-    
-    
-    public void addNode(Graphics2D g2d)
-    {
-       // System.out.println("Unit height"+ unit_height+ " and unit width= " + unit_width);
-        for(int i=0;i<=2*xmlparser.max_depth+2;i++)
-        {
-            for(int j=0;j<=2*xmlparser.maxm_diameter+2;j++)
-            {
-                if(grid[i][j]!=-1)
-                {
-                    
-                   // System.out.println("Node = "+grid[i][j]+" at i ="+i +" and j= "+j);
-                    node_num= grid[i][j];
-                    y= node_location[node_num].node_y;
-                    x= node_location[node_num].node_x; 
-                    //System.out.println("x "+x+" y= "+y);
-                    g2d.setColor(Color.BLACK);
-                    if(node_num==0)
-                    {
-                         g2d.setColor(Color.CYAN);
-                        g2d.fillRect(x*unit_width,y*unit_height,unit_width , unit_height/2);
-                         g2d.drawString(xmlparser.tag_obj[node_num].tag_name,x*unit_width+2,y*unit_height+10);
-                         g2d.setColor(Color.BLACK);
-                       
-                    }
-                    else {
-                       // g2d.setColor(Color.BLACK);
-                        g2d.drawRect(x*unit_width,y*unit_height,unit_width , unit_height/2);
-                         g2d.drawString(xmlparser.tag_obj[node_num].tag_name,x*unit_width,y*unit_height);
-                        g2d.setColor(Color.BLACK);
-                    }
-                    
-                   
-                    parent_node= xmlparser.tag_obj[node_num].parent_name;
-                    line_x1=node_location[parent_node].node_x;
-                    line_y1= node_location[parent_node].node_y;
-                    line_x2= x;
-                    line_y2=y;
-                    g2d.drawLine(unit_width*line_x1+15, unit_height*line_y1, unit_width*line_x2, unit_height*line_y2);
-                }
-            }
-        }
-    }// end of addNode
-    
-    
-    // find the location of each node 
-    public void find_cell_number()
-    {
-        System.out.println("Maxm depth after ="+xmlparser.max_depth+" and maxm diameter after= "+xmlparser.maxm_diameter);
-        for(int idx=0;idx<=xmlparser.max_depth;idx++)
-        {
-            if(xmlparser.level_diameter[idx]>0)
-            cal_position_in_level[idx]= xmlparser.maxm_diameter/xmlparser.level_diameter[idx];
-        }
-        int x=0,y=0;
-        for(int idx=0;idx<=xmlparser.max_depth;idx++)// run for each loop
-        {
-            k=1;
-            x= (2*idx);
-           if(idx==0)
-               x++;
-            for(int node=0;node<=xmlparser.node_number;node++)
-            {
-                if(xmlparser.tag_obj[node].level_number==idx && xmlparser.tag_obj[node].presence==true)
-                {
-                    y=k*cal_position_in_level[idx]; k=k+2;
-                    grid[x][y]=node; // node is situtated at cell (x,y)
-                    node_location[node].node_x=y;
-                    node_location[node].node_y=x;
-                }
-            }
-        }
-    }
-   
-    
-    // divide the whole window in grids and initialize it by -1// unvisited
-    public void make_grid()
-    {
-        for(int i=0;i<=(2*xmlparser.max_depth+4);i++)
-        {
-            for(int j=0;j<=(2*xmlparser.maxm_diameter+4);j++)
-                grid[i][j]=-1;
-        }
-    }
-   //end of making grid
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        
-       int x= e.getX();
-       int y=e.getY();
-       j= x/unit_width;
-       i= y/unit_height;
+     public static int line_num=1,counter=0,l=0;
+     public static int max_depth=-1;
+     public static int parent_node_number=0;
+     public static int line_length,new_node=0;
+     public static boolean error_check= false,frame_first_time=true;
+     public static String closing_tag="";
+     public static JFrame frame;
+     public static int maxm_diameter=0;
+     public static String string_between_tags="", parent_name="";
+     public static String attribute_string="";
+     public static Stack <String> tag_stack= new Stack<>();
+     public static Stack <Integer> tag_number= new Stack<>();
+     public static tag_struct tag_obj[]=new tag_struct[10000];
+     public static Integer level_diameter[]= new Integer[1000]; 
+     public static int node_number =-1;
+     public static void main(String args[])  throws IOException,FileNotFoundException    
+     {
+           for(int i=0;i<10000;i++)
+           {
+              tag_obj[i]=new tag_struct();
+           }
+        BufferedReader br;
       
-       //JOptionPane.showMessageDialog(this, "i "+i+" j ="+j);
-       if(grid[i][j]!=-1 && edit_button==false && delete_button==false && delete_single==false && update_button==false && add_button==false && add_btw==false &&  getcontent_button==false)// for showing hovered item
-       {
-           node_number= grid[i][j];
-           String tagdata=xmlparser.tag_obj[node_number].tag_data;
-           if(tagdata==" ")
-               tagdata="NULL";
-           String tagatt=xmlparser.tag_obj[node_number].tag_attribute;
-           if(tagatt==" ")
-               tagatt="NULL";
-           String str= "Tag Name : "+xmlparser.tag_obj[node_number].tag_name+"\n Tag Attribute: "+tagatt+"\n Tag Data: "+tagdata+"\n";
-           JOptionPane.showMessageDialog(this, str);
-       }
-       if(grid[i][j]!=-1 && delete_button== true && edit_button==false)
-       {
-           node1= grid[i][j];
-           try {
-               deletechild_func();
-           } catch (IOException ex) {
-               Logger.getLogger(treePanel.class.getName()).log(Level.SEVERE, null, ex);
-           }
-           delete_button= false;
-       }
-       if(grid[i][j]>=0 && delete_single==true && !edit_button)
-       {
-           delete_single=false;
-           node1= grid[i][j];
-           try {
-               single_delete();
-           } catch (IOException ex) {
-               Logger.getLogger(treePanel.class.getName()).log(Level.SEVERE, null, ex);
-           }
-           
-       }
-       if(grid[i][j]>=0 && update_button==true && edit_button==false && !delete_single)
-       {
-           node1= grid[i][j];
-           try {
-               update_node();
-           } catch (IOException ex) {
-               Logger.getLogger(treePanel.class.getName()).log(Level.SEVERE, null, ex);
-           }
-       }
+      
+      // Change this location to the location of the xml file in the computer.
+       br= new BufferedReader(new FileReader("C:\\Users\\cyber\\Desktop\\menu.xml"));
        
-       if(grid[i][j]>=0 && add_button==true)
-       {
-           
-           node1= grid[i][j];
-           try {
-              add_new_node();
-           } catch (IOException ex) {
-               Logger.getLogger(treePanel.class.getName()).log(Level.SEVERE, null, ex);
-           }
-       }
-       
-       
-       if(grid[i][j]!=-1 && first==0 && edit_button==true)
-       {
-           node1= grid[i][j];
-           first=1;
-          // JOptionPane.showMessageDialog(this, node1);
-           deletechild();
-       }
-       else if(grid[i][j]!=-1 && first==1 && edit_button==true)
-       {
-           node2= grid[i][j];
-          // JOptionPane.showMessageDialog(this, node2);
-           first=0;
-           edit_button=false;
-           try {
-               addchild();
-           } catch (IOException ex) {
-               Logger.getLogger(treePanel.class.getName()).log(Level.SEVERE, null, ex);
-           }
-           
-       }
-       if(grid[i][j]!=-1 && first_node==0 && add_btw==true)
-       {
-           node1= grid[i][j];
-           first_node=1;
-           
-       }
-       else if(grid[i][j]!=-1 && first_node==1 && add_btw==true)
-       {
-           node2= grid[i][j];
-           first_node=0;
-           AddBetweenNodes();
-       }
-       
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-       // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-       // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-       // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
-    
-    //edit node functions
-    public void deletechild()
-    {
-        int parent= xmlparser.tag_obj[node1].parent_name;
-        for(int idx=0;idx<xmlparser.tag_obj[parent].child.size();idx++)
+        
+        String str,tag_string;
+        int i;
+        
+        string_between_tags="";
+        while( (str= br.readLine())!=null)
         {
-            if(xmlparser.tag_obj[parent].child.get(idx)==node1)
+            if(error_check==true)// if there is error then break reading the file
+                break;
+            
+            line_num++;
+            line_length = str.length();
+            
+            
+            for(i=0;i<line_length&&error_check==false;)
             {
-                System.out.println("Index= hjeafsdnnnnnnnnnnnnnnnnnnnnnn"+xmlparser.tag_obj[parent].child.get(idx));
-                xmlparser.tag_obj[parent].child.remove(idx);
-                
-            }
-        }
-       
-    }
-    
-     public void addchild() throws IOException
-    {
-        int node_number=0;
-        xmlparser.tag_obj[node2].child.add(node1);
-        xmlparser.tag_obj[node1].parent_name=node2;
-        print_parent_child_relation_edit();
-        edit_button=false;
-    }
-     
-     //delete subtree funtion
-       public void  deletechild_func() throws IOException
-      {
-           int parent= xmlparser.tag_obj[node1].parent_name;
-            for(int idx=0;idx<xmlparser.tag_obj[parent].child.size();idx++)
-            {
-                if(xmlparser.tag_obj[parent].child.get(idx)==node1)
-                {
-                    System.out.println("Index= hjeafsdnnnnnnnnnnnnnnnnnnnnnn"+xmlparser.tag_obj[parent].child.get(idx));
-                    xmlparser.tag_obj[parent].child.remove(idx);
-                      dfs(node1);
+                if(str.charAt(i)=='<' && (str.charAt(i+1)=='?' || str.charAt(i+1)=='!')) 
                     break;
+                
+                tag_string="";
+                if(str.charAt(i)=='<') // char_data[i+1] is checking for comment part
+                {
+                    i++;
+                    while( i<line_length && str.charAt(i)!='>')
+                    {
+                        tag_string+=  str.charAt(i); i++;
+                    }
+                     get_tagword(tag_string); // the string between < and > sign is send to this function 
+                     i++;
+                }
+                else
+                {
+                    while(i<line_length &&  str.charAt(i)!='<')
+                    {
+                        if(node_number>=0)tag_obj[node_number].tag_data+=str.charAt(i);
+                         string_between_tags+=  str.charAt(i); i++;
+                         
+                    }
+                    
                 }
             }
-        
-            print_parent_child_relation_edit();
-      }
-       
-       // delete node function
-        public void single_delete() throws IOException 
-        {
-             int parent= xmlparser.tag_obj[node1].parent_name;
-              for(int idx=0;idx<xmlparser.tag_obj[parent].child.size();idx++)
-              {
-                    if(xmlparser.tag_obj[parent].child.get(idx)==node1)
-                    {
-                            System.out.println("Index= hjeafsdnnnnnnnnnnnnnnnnnnnnnn"+xmlparser.tag_obj[parent].child.get(idx));
-                            xmlparser.tag_obj[parent].child.remove(idx);
-                               xmlparser.tag_obj[node1].presence= false;
-                            break;
-                  }
-              }
-              for(int idx=0; idx<xmlparser.tag_obj[node1].child.size();idx++)
-              {
-                  int child=xmlparser.tag_obj[node1].child.get(idx);
-                  xmlparser.tag_obj[parent].child.add(child);
-                  xmlparser.tag_obj[child].parent_name= parent;
-              }
-              print_parent_child_relation_edit();
         }
-       
-       // paint new tree
-      public static void print_parent_child_relation_edit() throws IOException 
+ 
+            
+            if( error_check== false && !tag_stack.empty()) // if all tags are not popped from the stack , i.e. some of them are not matched
+            {
+                System.out.println("Opening Tag of "+ closing_tag+ " is not found");
+                System.out.println("The file is error. Some tags not closed");
+            }
+             
+            if(error_check== true) // there is error in the xml file
+            {
+                System.out.println("\nThe file contains some error. It is not well formed.");
+            }
+            else 
+            {
+               print_parent_child_relation();
+               System.out.println("\nThe file doesn't contain any error. It is well formed.");   
+            }
+    }// closing of main function
+    
+    public static void get_tagword(String tag)// for getting opening and closing tag words
     {
-        xmlparser.max_depth=-1;
-        xmlparser.maxm_diameter=0;
-         for(int idx=0;idx<=xmlparser.node_number;idx++)
-         {
-                 //  System.out.print("Node_number Edited: "+xmlparser.tag_obj[idx].node_index+"\tTag_name : "+xmlparser.tag_obj[idx].tag_name+"\tTag attribute:"+xmlparser.tag_obj[idx].tag_attribute+"\t Tag Data:"+xmlparser.tag_obj[idx].tag_data+"\tParent Name:"+xmlparser.tag_obj[idx].parent_name+" Level Number:"+xmlparser.tag_obj[idx].level_number );
-                   if(xmlparser.tag_obj[idx].child.size()>0 && xmlparser.tag_obj[idx].presence==true)
-                   {
-                      // System.out.print("\tChild: ");
-                       for(int v=0; v<xmlparser.tag_obj[idx].child.size();v++)
-                       {
-                           int ch=xmlparser.tag_obj[idx].child.get(v);
-                           int pa= xmlparser.tag_obj[ch].parent_name;
-                           xmlparser.tag_obj[ch].level_number= xmlparser.tag_obj[pa].level_number+1; 
-                         //  System.out.print(" "+ch+"  ");
-                       }
-                     //  System.out.println();
-                   }
-                  
-                  // else System.out.println("\tNo child");
-         }
-         for(int idx=0;idx<=xmlparser.node_number;idx++)
-         {
-             xmlparser.max_depth= Math.max(xmlparser.max_depth,xmlparser.tag_obj[idx].level_number);
-         }
-         for(int idx=0;idx<=xmlparser.max_depth+1;idx++)
-         {
-               xmlparser.level_diameter[idx]=0;
-         }
-        // System.out.println("node number = "+xmlparser.node_number);
-         for(int idx=0;idx<=xmlparser.node_number;idx++)
-         {
-               int child_level= xmlparser.tag_obj[idx].level_number;
-             if(xmlparser.tag_obj[idx].presence==true)
-                  xmlparser.level_diameter[child_level]++;     
-         }
-         xmlparser.maxm_diameter=-1;
-         for(int idx=0;idx<=xmlparser.max_depth;idx++)
-         {
-               xmlparser.maxm_diameter= Math.max(xmlparser.level_diameter[idx],xmlparser.maxm_diameter);
-         }
+        int i=0,counter=0;
+        l= tag.length();
+        boolean space_error_check;
+        String tag_string, stack_top_string , xml_tag_name;
         
-        System.out.println("Maxm depth after ="+xmlparser.max_depth+" and maxm diameter after= "+xmlparser.maxm_diameter);
-      //  newtree newtree_instance= new newtree();  
-        gui_test gt = new gui_test();
-    }
-      
-      // use dfs to deleted the whole subtree of the deleted node
-      public void dfs(int node1)
-      {
-          boolean visited[]= new boolean[xmlparser.node_number+5];
-          for(int node=0;node<=xmlparser.node_number;node++) visited[node]=false;
-          Stack <Integer> dfs_stack= new Stack<>();
-          xmlparser.tag_obj[node1].presence= false;
-          // xmlparser.tag_obj[node1].reinit();
-          dfs_stack.push(node1);
-         // System.out.print("node to be deleted : "+node1);
-          visited[node1]=true;
-          while(!dfs_stack.empty())
-          {
-              int k= dfs_stack.peek();
-              dfs_stack.pop();
-              for(int node=0;node<xmlparser.tag_obj[k].child.size();node++)
-              {
-                  int child= xmlparser.tag_obj[k].child.get(node);
-                  if(visited[child]==false )
-                  {
-                     // System.out.println("  "+child);
-                      dfs_stack.push(child);
-                      visited[child]=true;
-                      xmlparser.tag_obj[child].presence=false;
-                    //  xmlparser.tag_obj[child].reinit();
-                  }
-              }
-          }
-      }
-
-    public void update_node() throws IOException {
-        
-        System.out.println("Update button called");
-       update up =new update();
-       //print_parent_child_relation_edit();
-       
-    }
     
-    public void add_new_node() throws IOException {
-       
-        System.out.println("new  button called");
-       update up =new update();
-       //print_parent_child_relation_edit();
-    }
-
-    public void AddBetweenNodes() {
-        System.out.println("Add between nodes");
+        if(l==0)// if the tag is empty
+        {
+             System.out.println("The tag should not be null ");
+             System.out.println("The file contains error in line no. "+(line_num-1));
+             error_check= true;
+             return;
+        }
         
-        xmlparser.new_node= xmlparser.node_number+1;
-         int parent= node1;
-              for(int idx=0;idx<xmlparser.tag_obj[parent].child.size();idx++)
-              {
-                    if(xmlparser.tag_obj[parent].child.get(idx)==node2)
+        if(tag.charAt(0)==' ' || tag.charAt(l-1)==' ') // contains error
+        {
+             System.out.println("The tag "+tag+" should not contain empty space ");
+             System.out.println("The file contains error in line no. "+(line_num-1));
+             error_check=true; 
+             return;
+        }
+        
+        
+        
+        // ##################### Opening Tag #############################
+        
+        if(tag.charAt(0)!='/') // opening tag
+        {
+            node_number++;
+            TagnameStartXMLCheck(tag);
+            if(error_check==true)return;
+           if(tag.charAt(0)>='a' && tag.charAt(0)<='z' || tag.charAt(0)>='A' && tag.charAt(0)<='Z' || tag.charAt(0)=='_') // starting char should not be digit
+            {
+               
+           space_error_check= check_for_space_error(tag); // checks for forbidden space in the tag string, define below
+            if(space_error_check==true)// there is error
+            {
+                error_check= true;
+                return;
+            }
+             
+            if(tag.charAt(l-1)=='/')
+            {
+                return;
+            }
+            while(i<l && tag.charAt(i)!=' ' )
+            {
+                i++;
+                counter++;
+            }
+            
+            tag_string = tag.substring(0, counter);
+            tag_stack.push(tag_string);
+            tag_number.push(node_number);
+             
+            if(counter!=l) // for checking attributes
+            {
+                attribute_string= tag.substring(counter+1,l); // atribute for tag_string, to be used in struct
+            }
+            else attribute_string="NULL";
+           
+            tag_obj[node_number].tag_name= tag_string;
+            tag_obj[node_number].tag_attribute= attribute_string;
+            tag_obj[node_number].node_index= node_number;
+           }// opening <tag> checked end
+           else
+           {
+                System.out.println("The tag "+tag+" should not start with a a special character or digit ");
+                 System.out.println("The file contains error in line no. "+(line_num-1));
+                error_check= true;
+                return;
+           }
+               
+        } // end of opening tag
+        
+        
+        
+        //##################    closing tag ##################### 
+        else
+        {
+            while(i<l && tag.charAt(i)!=' ' )
+            {
+                i++;
+                counter++;
+            }   
+            closing_tag = tag.substring(1,l); // closing tag attributes
+            stack_top_string= tag_stack.peek();
+            if( tag_stack.empty()== false && (tag_stack.peek()).equals(closing_tag) )// if stack is not empty and it is matched
+            {
+                tag_stack.pop();
+                int temp1= tag_number.peek(); // child node number
+                tag_number.pop();
+                if(tag_stack.size()>0)
+                {
+                    parent_name= tag_stack.peek(); 
+                    int temp= tag_number.peek(); // parent node number
+                    int nod= tag_obj[temp1].node_index;
+                    tag_obj[temp1].parent_name= temp;
+                    tag_obj[temp].child.add(temp1);
+                    //System.out.println("Tag Number:"+tag_obj[temp1].node_index+" Tag Name:"+closing_tag+"\tTag's Attribute:"+attribute_string+"\tTag Data:"+string_between_tags+"\tParent:"+ parent_name);
+                }
+                else 
+                {
+                     parent_name= "ROOT NODE";
+                      int nod= tag_obj[0].node_index;
+                     tag_obj[nod].parent_name= 0;
+                   // System.out.println("Tag Number:"+tag_obj[0].node_index+"Tag Name:"+closing_tag+"\tTag's Attribute:"+ attribute_string+"\tTag Data:"+ string_between_tags+"\tParent:"+ parent_name);
+                }
+                string_between_tags="";
+                attribute_string="";
+            }
+            else
+            {
+                error_check=true; // errorneous code
+                System.out.println("the opening tag of "+closing_tag+" is not matched\n");
+                System.out.println("The file contains error in line no. "+(line_num-1));
+                return;
+            }       
+       }// closing tag ended
+    }    // function get_tagword ended here
+
+       // function check_for_space_error for space error checking starts here
+    public static boolean check_for_space_error(String tag) 
+    {
+       int l= tag.length(),i;
+       tag+='>';
+       int quote_counter=0,num_of_spaces=0;
+       for(i=0;i<l;i++)
+       {
+           if(tag.charAt(i)==' ' && quote_counter%2==0)
+               num_of_spaces++;
+           if(tag.charAt(i)==' ' && quote_counter%2==0 && tag.charAt(i+1)==' ')//continous space checking
+            {
+                error_check=true; // errorneous code
+                System.out.println("There are more than one space between two words in the tag strings: "+tag+"\n");
+                System.out.println("The file contains error in line no. "+(line_num-1));
+                return true;
+            }
+           if(tag.charAt(i)=='"')
+           {
+               quote_counter++;
+               if(quote_counter%2==0) // even  means the closing quote
+               {
+                    if(tag.charAt(i+1)!='>' && tag.charAt(i+1)!=' ') // space between multiple strings
                     {
-                            System.out.println("Index= hjeafsdnnnnnnnnnnnnnnnnnnnnnn"+xmlparser.tag_obj[parent].child.get(idx));
-                            xmlparser.tag_obj[parent].child.remove(idx);
-                               
-                            break;
-                  }
-              }
-          //xmlparser.tag_obj[parent].child.add(xmlparser.new_node);
-          //xmlparser.tag_obj[xmlparser.new_node].parent_name= parent;
+                        error_check=true; // errorneous code
+                        System.out.println("There are no space between multiple attributes of the tag : "+tag+"\n");
+                        System.out.println("The file contains error in line no. "+(line_num-1));
+                        return true;
+                    }
+               }
+           }
+       }// end of for loop
+         if(quote_counter!=2*num_of_spaces) // if attributes quotes are not matched
+           {
+                error_check=true; // errorneous code
+                System.out.println("The double quotes of the attributes of the tag "+tag+" are not matched \n");
+                System.out.println("The file contains error in line no. "+(line_num-1));
+                return true;
+           }       
+         return false;
+    } // check for space error in the tag string i.e. < and > sign
+
+    // printing the parent child relationship
+    public static void print_parent_child_relation() throws IOException 
+    {
+         for(int idx=0;idx<=node_number;idx++)
+         {
+                   System.out.print("Node_number: "+tag_obj[idx].node_index+"\tTag_name : "+tag_obj[idx].tag_name+"\tTag attribute:"+tag_obj[idx].tag_attribute+"\t Tag Data:"+tag_obj[idx].tag_data+"\tParent Name:"+tag_obj[idx].parent_name+" Level Number:"+tag_obj[idx].level_number );
+                   if(tag_obj[idx].child.size()>0)
+                   {
+                       System.out.print("\tChild: ");
+                       for(int v=0; v<tag_obj[idx].child.size();v++)
+                       {
+                           int ch=tag_obj[idx].child.get(v);
+                           int pa= tag_obj[ch].parent_name;
+                           tag_obj[ch].level_number= tag_obj[pa].level_number+1; 
+                           max_depth= Math.max(max_depth,tag_obj[ch].level_number);
+                            xmlparser.max_depth= Math.max(xmlparser.max_depth,xmlparser.tag_obj[ch].level_number);
+                           System.out.print(" "+ch+"  ");
+                       }
+                       System.out.println();
+                   }
+                   else System.out.println("\tNo child");
+                   
+         }
           
-          xmlparser.tag_obj[node2].parent_name= xmlparser.new_node;
-          xmlparser.tag_obj[xmlparser.new_node].child.add(node2);
-           update up =new update();
+         for(int idx=0;idx<=max_depth+1;idx++)
+         {
+               level_diameter[idx]=0;
+         }
+         System.out.println("node number = "+node_number);
+         for(int idx=0;idx<=node_number;idx++)
+         {
+              int child_level= tag_obj[idx].level_number;
+               level_diameter[child_level]++;     
+         }
+         maxm_diameter=-1;
+         for(int idx=0;idx<=max_depth;idx++)
+         {
+               maxm_diameter= Math.max(level_diameter[idx],maxm_diameter);
+         }
         
-        
+        System.out.println("Maxm depth ="+max_depth+" and maxm diameter= "+xmlparser.maxm_diameter);
+         gui_test gui_test_buildTree= new gui_test();
+         frame_first_time=false;
     }
 
-   
-}
-    
+    public static void TagnameStartXMLCheck(String tag) {
+            if(l>=3) // starting 3 characters should not be "xml"
+                {
+                    String xml_tag_name= tag.substring(0,3);
+                    if(xml_tag_name.equals("xml")==true)
+                    {
+                        System.out.println("The tag "+tag+" should not start with xml ");
+                        System.out.println("The file contains error in line no. "+(line_num-1));
+                         error_check=true;
+                         return;
+                    }
+
+                }
+    }
+} 
+// end of the xmlparser class- main class 
