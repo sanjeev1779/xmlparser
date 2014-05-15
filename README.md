@@ -1,6 +1,6 @@
 xmlparser
 =========
- A Java Project for XML File well-formed checker and generating XML File.
+ A Java Project for XML File well-formed checker and generating GUI based XML Tree.
  It takes an xml file input. It checks for well-formed structred of the xml file. If there is any error in the file, it gives the line number and column of the number and error . 
  It generates the GUI based xml tree of the xml  in java. The tree has features:
  1. Getting Content of the node by clicking on it.
