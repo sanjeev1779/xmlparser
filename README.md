@@ -15,4 +15,4 @@ xmlparser
 
   Get the full source code: https://drive.google.com/file/d/0B4NjsxPewchAMnc0aDJqc25WMzQ
   
-  For any bugs and suggestions, feel free to contact me at:  sanjeevkumar@iitj.ac.in
+  For any bugs and suggestions, feel free to contact me at:  sanjeevkumar@iitj.ac.in .
